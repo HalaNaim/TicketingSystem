@@ -1,6 +1,6 @@
 # **Project Scope and Planning**
 
-# Project Scope
+## Project Scope
 
 The IT Help Desk & Ticketing Management System is a modern web-based platform designed to streamline technical support operations within the company. Employees can submit support requests, IT support agents can manage and resolve tickets, and administrators can oversee workflows, reporting, and user management. The system simulates enterprise-level software development with modules for authentication, ticket lifecycle management, notifications, dashboards, and analytics.
 
@@ -16,7 +16,7 @@ The IT Help Desk & Ticketing Management System is a modern web-based platform de
 
 - **Dashboard** provides ticket statistics and reports.
 
-### Non-Functional Requirements
+## Non-Functional Requirements
 
 - Secure authentication and role-based authorization.
 
