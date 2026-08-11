@@ -1,1 +1,1 @@
-Placeholder content
+Note: after running in my-react-app "npm run dev" make sure that the link that appears "...localhost/5713" the port 5713 is also used in program.cs in MyAPI. If it changed to 5714, then you should change it in MyAPI folder in program.cs to avoid errors.
