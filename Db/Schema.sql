@@ -7,13 +7,15 @@ CREATE TABLE Roles (
 
 -- Users
 CREATE TABLE Users (
-  Id INT PRIMARY KEY IDENTITY(1,1),
-  Name VARCHAR(100),
-  Email VARCHAR(100) UNIQUE,
-  Password VARCHAR(255),
-  RoleId INT,
-  FOREIGN KEY (RoleId) REFERENCES Roles(Id)
+    Id INT PRIMARY KEY IDENTITY,
+    Name NVARCHAR(100) NOT NULL,
+    Email NVARCHAR(100) NOT NULL UNIQUE,
+    Password NVARCHAR(100) NOT NULL,
+    RoleId INT NOT NULL,
+    PasswordResetToken NVARCHAR(200) NULL,
+    PasswordResetExpiry DATETIME NULL
 );
+
 
 -- Categories
 CREATE TABLE Categories (
