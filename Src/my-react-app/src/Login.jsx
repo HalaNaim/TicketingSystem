@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import "./Login.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 function Login() {
   const emailRef = useRef(null);
@@ -36,7 +36,7 @@ function Login() {
       });
 
       if (!response.ok) {
-        const text = await response.text(); // log server response
+        const text = await response.text();
         console.error("Server error:", text);
         alert("Login failed!");
         return;
@@ -49,11 +49,9 @@ function Login() {
         return;
       }
 
-      localStorage.setItem("token", data.token); 
-        navigate("/dashboard");
+      localStorage.setItem("token", data.token);
+      navigate("/dashboard");
       alert("Login successful!");
-   
-
     } catch (err) {
       console.error("Network error:", err);
       alert("Error connecting to server");
@@ -88,7 +86,7 @@ function Login() {
 
       {/* Forgot password link */}
       <div className="forgot-password">
-        <a href="#">Forgot Password?</a>
+        <Link to="/forgot-password">Forgot Password?</Link>
       </div>
 
       {/* Login button */}
@@ -98,11 +96,13 @@ function Login() {
       <div className="or">OR</div>
 
       {/* Register button */}
-      <button type="button" className="register-btn">Register</button>
+      <button type="button" className="register-btn" onClick={() => navigate("/register")}>
+        Register
+      </button>
 
       {/* Sign up text */}
       <div className="signup-text">
-        Don't have an account? <a href="#">Sign up now!</a>
+        Don't have an account? <Link to="/register">Sign up now!</Link>
       </div>
     </form>
   );
