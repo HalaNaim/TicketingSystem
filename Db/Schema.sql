@@ -1,4 +1,3 @@
--- schema.sql
 -- Roles
 CREATE TABLE Roles (
   Id INT PRIMARY KEY IDENTITY(1,1),
@@ -7,15 +6,15 @@ CREATE TABLE Roles (
 
 -- Users
 CREATE TABLE Users (
-    Id INT PRIMARY KEY IDENTITY,
+    Id INT PRIMARY KEY IDENTITY(1,1),
     Name NVARCHAR(100) NOT NULL,
     Email NVARCHAR(100) NOT NULL UNIQUE,
     Password NVARCHAR(100) NOT NULL,
     RoleId INT NOT NULL,
     PasswordResetToken NVARCHAR(200) NULL,
-    PasswordResetExpiry DATETIME NULL
+    PasswordResetExpiry DATETIME NULL,
+    FOREIGN KEY (RoleId) REFERENCES Roles(Id)
 );
-
 
 -- Categories
 CREATE TABLE Categories (
