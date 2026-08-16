@@ -9,6 +9,8 @@ namespace MyAPI.Models
         public string Email { get; set; }      // matches Users.Email
         public string Password { get; set; }   // matches Users.Password
         public int RoleId { get; set; }        // FK to Roles.Id
+        public string? PasswordResetToken { get; set; }   // secure token
+        public DateTime? PasswordResetExpiry { get; set; } // expiry time
 
         // Navigation property
         public Role Role { get; set; }         // gives you RoleName like "Admin", "Manager", etc.
