@@ -1,5 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./Dashboard.css";
+import axios from "axios";
+import { LayoutDashboard, ClipboardList, PlusCircle, User, BarChart3, Settings, LogOut } from "lucide-react";
+import { NavLink } from "react-router-dom";
+
 
 function AgentDashboard({ onLogout }) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -17,18 +21,19 @@ function AgentDashboard({ onLogout }) {
   ];
 
   const recentActivity = [
-    { text: "Ticket #1023 resolved", time: "5 minutes ago" },
+    { text: "Ticket #1 resolved", time: "5 minutes ago" },
     { text: "New ticket assigned to John Doe", time: "10 minutes ago" },
     { text: "VPN issue ticket closed by Mike", time: "15 minutes ago" },
   ];
 
-  const ticketList = [
-    { id: "#1058", subject: "Slow computer performance", status: "Open", priority: "High", created: "Apr 22, 2024" },
-    { id: "#1057", subject: "Cannot access shared folder", status: "In Progress", priority: "Medium", created: "Apr 22, 2024" },
-    { id: "#1056", subject: "Request new monitor", status: "Resolved", priority: "Low", created: "Apr 21, 2024" },
-    { id: "#1055", subject: "Email account locked out", status: "Open", priority: "High", created: "Apr 21, 2024" },
-    { id: "#1053", subject: "VPN connection issues", status: "Pending Approval", priority: "Medium", created: "Apr 20, 2024" },
-  ];
+
+const [tickets, setTickets] = useState([]);
+
+useEffect(() => {
+  axios.get("https://localhost:7184/Tickets")
+    .then(res => setTickets(res.data))
+    .catch(err => console.error(err));
+}, []);
 
   return (
     <div className="dashboard-container">
@@ -62,14 +67,42 @@ function AgentDashboard({ onLogout }) {
       <div className="dashboard-content">
         <aside className="sidebar">
           <nav className="nav-menu">
-            <div className="nav-item active">📊 Dashboard</div>
-            <div className="nav-item">👤 My Tickets</div>
-            <div className="nav-item">➕ Create Ticket</div>
-            <div className="nav-item">📥 Assigned Tickets</div>
-            <div className="nav-item">📈 Performance</div>
-            <div className="nav-item">⚙️ Settings</div>
+            <NavLink to="/agent" end className="nav-item">
+  <LayoutDashboard size={18} color="#3b82f6" className="nav-icon" />
+  <span>Dashboard</span>
+</NavLink>
+
+<NavLink to="/my-tickets" className="nav-item">
+  <ClipboardList size={18} color="#10b981" className="nav-icon" />
+  <span>My Tickets</span>
+</NavLink>
+
+<NavLink to="/tickets/new" className="nav-item">
+  <PlusCircle size={18} color="#ec4899" className="nav-icon" />
+  <span>Create Ticket</span>
+</NavLink>
+
+<NavLink to="/assigned" className="nav-item">
+  <User size={18} color="#8b5cf6" className="nav-icon" />
+  <span>Assigned Tickets</span>
+</NavLink>
+
+<NavLink to="/performance" className="nav-item">
+  <BarChart3 size={18} color="#06b6d4" className="nav-icon" />
+  <span>Performance</span>
+</NavLink>
+
+         <NavLink to="/settings" className="nav-item">
+          <Settings size={18} color="#64748b" className="nav-icon" />
+          <span>Settings</span>
+          </NavLink>
+
           </nav>
-          <button className="logout-btn" onClick={onLogout}>Logout</button>
+          <button className="logout-btn" onClick={onLogout}>
+  <LogOut size={16} />
+  <span>Logout</span>
+</button>
+
         </aside>
 
         <main className="main-content">
@@ -131,21 +164,37 @@ function AgentDashboard({ onLogout }) {
                     <th>Action</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {ticketList.map((ticket) => (
-                    <tr key={ticket.id}>
-                      <td>{ticket.id}</td>
-                      <td>{ticket.subject}</td>
-                      <td><span className={`status ${ticket.status.toLowerCase().replace(/\s+/g, '-')}`}>{ticket.status}</span></td>
-                      <td>{ticket.priority}</td>
-                      <td>{ticket.created}</td>
-                      <td>
-                        <button className="action-btn view">View</button>
-                        <button className="action-btn edit">Edit</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
+               <tbody>
+  {tickets.length === 0 ? (
+    <tr>
+      <td colSpan="6">No tickets found</td>
+    </tr>
+  ) : (
+    tickets.slice(0, 5).map(ticket => (
+      <tr key={ticket.id}>
+        <td>#{ticket.id}</td>
+        <td>{ticket.subject}</td>
+        <td>
+          <span className={`status ${ticket.statusName?.toLowerCase().replace(/\s+/g, '-')}`}>
+            {ticket.statusName || `Status ${ticket.statusId}`}
+          </span>
+        </td>
+        <td>
+          <span className={`priority ${ticket.priorityName?.toLowerCase()}`}>
+            {ticket.priorityName || `Priority ${ticket.priorityId}`}
+          </span>
+        </td>
+        <td>{new Date(ticket.createdDate).toLocaleDateString()}</td>
+        <td>
+          <button className="action-btn view">View</button>
+          <button className="action-btn edit">Edit</button>
+        </td>
+      </tr>
+    ))
+  )}
+</tbody>
+
+
               </table>
             </div>
             <div className="chart-container">

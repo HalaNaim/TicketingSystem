@@ -1,8 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./Dashboard.css";
+import axios from "axios";
+import { NavLink, useNavigate } from "react-router-dom";
+import { LayoutDashboard, PlusCircle, ClipboardList, BookOpen, HelpCircle, Settings, LogOut } from "lucide-react";
 
 function EmployeeDashboard({ userName, onLogout }) {
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
   const displayName = userName === "Employee User" ? "Employee" : userName;
 
   const [tasks, setTasks] = useState([
@@ -10,21 +14,21 @@ function EmployeeDashboard({ userName, onLogout }) {
     { id: 2, text: "Follow up on install", due: "Due Today", completed: false },
   ]);
 
+  const [tickets, setTickets] = useState([]);
+
+  useEffect(() => {
+    axios.get("https://localhost:7184/Tickets")
+      .then(res => setTickets(res.data))
+      .catch(err => console.error(err));
+  }, []);
+
   const toggleTask = (id) => {
     setTasks(tasks.map(task => 
       task.id === id ? { ...task, completed: !task.completed } : task
     ));
   };
 
-  const recentTicketsEmployee = [
-    { id: "#1243", subject: "Email not syncing", status: "Open", lastUpdate: "10 minutes ago" },
-    { id: "#1237", subject: "VPN setup request", status: "In Progress", lastUpdate: "30 minutes ago" },
-    { id: "#1229", subject: "Install update", status: "Awaiting Response", lastUpdate: "1 hour ago" },
-    { id: "#1215", subject: "Printer issue", status: "Resolved", lastUpdate: "Yesterday" },
-    { id: "#1211", subject: "VPN problem", status: "Closed", lastUpdate: "Apr 22" },
-  ];
-
-  return (
+   return (
     <div className="dashboard-container">
       {/* Header */}
       <header className="dashboard-header">
@@ -55,20 +59,41 @@ function EmployeeDashboard({ userName, onLogout }) {
       </header>
 
       <div className="dashboard-content">
-        {/* Sidebar */}
+         {/* Sidebar */}
         <aside className="sidebar">
           <nav className="nav-menu">
-            <div className="nav-item active">📊 Dashboard</div>
-            <div className="nav-item">➕ Submit Ticket</div>
-            <div className="nav-item">📋 My Tickets</div>
-            <div className="nav-item">📚 Knowledge Base</div>
-            <div className="nav-item">❓ FAQ</div>
-            <div className="nav-item">⚙️ Settings</div>
+            <NavLink to="/employee" end className="nav-item">
+              <LayoutDashboard size={18} color="#3b82f6" className="nav-icon" />
+              <span>Dashboard</span>
+            </NavLink>
+            <NavLink to="/tickets/new" className="nav-item">
+              <PlusCircle size={18} color="#ec4899" className="nav-icon" />
+              <span>Submit Ticket</span>
+            </NavLink>
+            <NavLink to="/my-tickets" className="nav-item">
+              <ClipboardList size={18} color="#10b981" className="nav-icon" />
+              <span>My Tickets</span>
+            </NavLink>
+            <NavLink to="/knowledge-base" className="nav-item">
+              <BookOpen size={18} color="#8b5cf6" className="nav-icon" />
+              <span>Knowledge Base</span>
+            </NavLink>
+            <NavLink to="/faq" className="nav-item">
+              <HelpCircle size={18} color="#06b6d4" className="nav-icon" />
+              <span>FAQ</span>
+            </NavLink>
+            <NavLink to="/settings" className="nav-item">
+              <Settings size={18} color="#64748b" className="nav-icon" />
+              <span>Settings</span>
+            </NavLink>
           </nav>
-          <button className="logout-btn" onClick={onLogout}>Logout</button>
+          <button className="logout-btn" onClick={onLogout}>
+            <LogOut size={16} />
+            <span>Logout</span>
+          </button>
         </aside>
 
-        {/* Main Content */}
+      {/* Main Content */}
         <main className="employee-main-content">
           <h1 className="welcome-title">Welcome, {displayName}!</h1>
 
@@ -76,23 +101,25 @@ function EmployeeDashboard({ userName, onLogout }) {
           <div className="stats-grid employee-stats">
             <div className="stat-card">
               <h3>Open Tickets</h3>
-              <p className="stat-number">2</p>
+              <p className="stat-number">{tickets.filter(t => t.statusId === 1).length}</p>
             </div>
             <div className="stat-card">
               <h3>Tickets in Progress</h3>
-              <p className="stat-number">3</p>
+              <p className="stat-number">{tickets.filter(t => t.statusId === 2).length}</p>
             </div>
             <div className="stat-card">
               <h3>Awaiting Response</h3>
-              <p className="stat-number">1</p>
+              <p className="stat-number">{tickets.filter(t => t.statusId === 5).length}</p>
             </div>
             <div className="stat-card">
               <h3>Resolved Tickets</h3>
-              <p className="stat-number">5</p>
+              <p className="stat-number">{tickets.filter(t => t.statusId === 3).length}</p>
             </div>
           </div>
 
           <div className="employee-content-grid">
+
+
             {/* Recent Tickets */}
             <div className="content-section">
               <h2>Recent Tickets</h2>
@@ -106,18 +133,27 @@ function EmployeeDashboard({ userName, onLogout }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {recentTicketsEmployee.map((ticket) => (
-                    <tr key={ticket.id}>
-                      <td>{ticket.id}</td>
-                      <td>{ticket.subject}</td>
-                      <td><span className={`status ${ticket.status.toLowerCase().replace(/\s+/g, '-')}`}>{ticket.status}</span></td>
-                      <td>{ticket.lastUpdate}</td>
-                    </tr>
-                  ))}
+                  {tickets.length === 0 ? (
+                    <tr><td colSpan="4">No tickets found</td></tr>
+                  ) : (
+                    tickets.slice(0, 5).map(ticket => (
+                      <tr key={ticket.id}>
+                        <td>#{ticket.id}</td>
+                        <td>{ticket.subject}</td>
+                        <td>
+                          <span className={`status ${ticket.statusName?.toLowerCase().replace(/\s+/g, '-')}`}>
+                            {ticket.statusName || `Status ${ticket.statusId}`}
+                          </span>
+                        </td>
+                        <td>{new Date(ticket.updatedAt || ticket.createdDate).toLocaleString()}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
-              <button className="view-all-btn">View All</button>
+              <button className="view-all-btn" onClick={() => navigate("/my-tickets")}>View All</button>
             </div>
+
 
             {/* My Tasks + Resolution Stats Column */}
             <div className="employee-right-column">

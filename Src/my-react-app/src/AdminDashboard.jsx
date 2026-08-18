@@ -1,13 +1,40 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./Dashboard.css";
+import axios from "axios";
+
+import { Routes, Route, NavLink } from "react-router-dom";  
+import TicketList from "./components/TicketList";         
+import TicketDetail from "./components/TicketDetail";     
+import TicketEdit from "./components/TicketEdit";         
+import TicketForm from "./components/TicketForm";  
+import { LayoutDashboard, Users, Tags, ClipboardList, PlusCircle,
+         BarChart3, Settings, LogOut} from "lucide-react";  
+
+// Maps DB numeric IDs → readable labels + CSS class
+const STATUS_MAP = {
+  1: { label: "Open",        cls: "open" },
+  2: { label: "In Progress", cls: "in-progress" },
+  3: { label: "Resolved",    cls: "resolved" },
+  4: { label: "Closed",      cls: "closed" },
+};
+
+const PRIORITY_MAP = {
+  1: { label: "High",   cls: "high" },
+  2: { label: "Medium", cls: "medium" },
+  3: { label: "Low",    cls: "low" },
+};
 
 function AdminDashboard({ onLogout }) {
   const [searchQuery, setSearchQuery] = useState("");
-  const ticketData = [
-    { id: "T001", title: "System Bug Fix", status: "Open", priority: "High", assigned: "John Doe" },
-    { id: "T002", title: "Feature Request", status: "In Progress", priority: "Medium", assigned: "Jane Smith" },
-    { id: "T003", title: "Database Optimization", status: "Closed", priority: "Low", assigned: "Mike Johnson" },
-  ];
+  const [tickets, setTickets] = useState([]);
+
+  useEffect(() => {
+    axios.get("https://localhost:7184/Tickets")
+      .then(res => setTickets(res.data))
+      .catch(err => console.error(err));
+  }, [])
+
+
 
   return (
     <div className="dashboard-container">
@@ -42,16 +69,44 @@ function AdminDashboard({ onLogout }) {
       <div className="dashboard-content">
         {/* Sidebar */}
         <aside className="sidebar">
-          <nav className="nav-menu">
-            <div className="nav-item active">📊 Dashboard</div>
-            <div className="nav-item">👥 Manage Users</div>
-            <div className="nav-item">🏷️ Categories & Priorities</div>
-            <div className="nav-item">📋 Tickets Overview</div>
-            <div className="nav-item">📈 Reports & Analytics</div>
-            <div className="nav-item">⚙️ Settings</div>
-          </nav>
-          <button className="logout-btn" onClick={onLogout}>Logout</button>
-        </aside>
+  <nav className="nav-menu">
+
+    <NavLink to="/admin" end className="nav-item">
+      <LayoutDashboard size={18} color="#3b82f6" className="nav-icon" />
+      <span>Dashboard</span>
+    </NavLink>
+    
+    <NavLink to="/users" className="nav-item">
+      <Users size={18} color="#8b5cf6" className="nav-icon" />
+      <span>Manage Users</span>
+    </NavLink>
+    <NavLink to="/categories & Priorities" className="nav-item">
+      <Tags size={18} color="#f59e0b" className="nav-icon" />
+      <span>Categories & Priorities</span>
+    </NavLink>
+    <NavLink to="/tickets" className="nav-item">
+      <ClipboardList size={18} color="#10b981" className="nav-icon" />
+      <span>Tickets</span>
+    </NavLink>
+    <NavLink to="/tickets/new" className="nav-item">
+      <PlusCircle size={18} color="#ec4899" className="nav-icon" />
+      <span>Create Ticket</span>
+    </NavLink>
+    <NavLink to="/Reports & Analytics" className="nav-item">
+      <BarChart3 size={18} color="#06b6d4" className="nav-icon" />
+      <span>Reports & Analytics</span>
+    </NavLink>
+    <NavLink to="/settings" className="nav-item">
+      <Settings size={18} color="#64748b" className="nav-icon" />
+      <span>Settings</span>
+    </NavLink>
+  </nav>
+
+  <button className="logout-btn" onClick={onLogout}>
+    <LogOut size={16} />
+    <span>Logout</span>
+  </button>
+</aside>
 
         {/* Main Content */}
         <main className="main-content">
@@ -90,20 +145,30 @@ function AdminDashboard({ onLogout }) {
                 </tr>
               </thead>
               <tbody>
-                {ticketData.map((ticket) => (
-                  <tr key={ticket.id}>
-                    <td>{ticket.id}</td>
-                    <td>{ticket.title}</td>
-                    <td><span className={`status ${ticket.status.toLowerCase().replace(/\s+/g, '-')}`}>{ticket.status}</span></td>
-                    <td><span className={`priority ${ticket.priority.toLowerCase()}`}>{ticket.priority}</span></td>
-                    <td>{ticket.assigned}</td>
-                    <td>
-                      <button className="action-btn edit">Edit</button>
-                      <button className="action-btn delete">Delete</button>
-                      <button className="action-btn view">View</button>
-                    </td>
+                 {tickets.length === 0 ? (
+                  <tr>
+                    <td colSpan="6">No tickets found</td>
                   </tr>
-                ))}
+                ) : (
+                  tickets.slice(0, 5).map(ticket => {
+                    const status = STATUS_MAP[ticket.statusId] || { label: "-", cls: "" };
+                    const priority = PRIORITY_MAP[ticket.priorityId] || { label: "-", cls: "" };
+                    return (
+                      <tr key={ticket.id}>
+                        <td>#{ticket.id}</td>
+                        <td>{ticket.subject}</td>
+                        <td><span className={`status ${status.cls}`}>{status.label}</span></td>
+                        <td><span className={`priority ${priority.cls}`}>{priority.label}</span></td>
+                        <td>{ticket.agentName || `Agent ${ticket.agentId}`}</td>
+                        <td>
+                          <button className="action-btn edit">Edit</button>
+                          <button className="action-btn delete">Delete</button>
+                          <button className="action-btn view">View</button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
@@ -183,6 +248,12 @@ function AdminDashboard({ onLogout }) {
               </svg>
             </div>
           </div>
+          <Routes>   
+    <Route path="/tickets" element={<TicketList />} />
+    <Route path="/tickets/:id" element={<TicketDetail />} />
+    <Route path="/tickets/:id/edit" element={<TicketEdit />} />
+    <Route path="/tickets/new" element={<TicketForm />} />
+  </Routes>
         </main>
       </div>
     </div>

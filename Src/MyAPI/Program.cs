@@ -22,7 +22,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp",
-        policy => policy.WithOrigins("http://localhost:5173") // ?? React dev server
+        policy => policy.WithOrigins("http://localhost:5173") //please pay attention to port number
                         .AllowAnyHeader()
                         .AllowAnyMethod());
 });

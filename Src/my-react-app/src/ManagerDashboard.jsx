@@ -1,13 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./Dashboard.css";
+import axios from "axios";
+import { LayoutDashboard, Users, ClipboardList, BarChart3, MessageSquare, Settings, LogOut } from "lucide-react";
+import { NavLink } from "react-router-dom";
+
 
 function ManagerDashboard({ onLogout }) {
   const [searchQuery, setSearchQuery] = useState("");
-  const summaryCards = [
-    { title: "Open Tickets", value: 42 },
-    { title: "In Progress", value: 15 },
-    { title: "Resolved Today", value: 23 },
-    { title: "Team Members", value: 8 },
+  const [tickets, setTickets] = useState([]);
+
+  useEffect(() => {
+    axios.get("https://localhost:7184/Tickets")
+      .then(res => setTickets(res.data))
+      .catch(err => console.error(err));
+  }, []);
+
+   const summaryCards = [
+    { title: "Open Tickets", value: tickets.filter(t => t.statusId === 1).length },
+    { title: "In Progress", value: tickets.filter(t => t.statusId === 2).length },
+    { title: "Resolved Today", value: tickets.filter(t => t.statusId === 3).length }, 
+    { title: "Team Members", value: 8 }, // keep static or replace with backend later
   ];
 
   const performanceMetrics = [
@@ -22,13 +34,6 @@ function ManagerDashboard({ onLogout }) {
     { name: "Mike", tickets: 2, status: "Online" },
   ];
 
-  const recentTickets = [
-    { id: "#1058", subject: "Slow computer performance", status: "Open", priority: "High", agent: "John" },
-    { id: "#1057", subject: "Cannot access shared folder", status: "In Progress", priority: "Medium", agent: "Sarah" },
-    { id: "#1056", subject: "Request new monitor", status: "Resolved", priority: "Low", agent: "Mike" },
-    { id: "#1055", subject: "Email account locked out", status: "Open", priority: "High", agent: "John" },
-    { id: "#1053", subject: "VPN connection issues", status: "Pending Approval", priority: "Medium", agent: "Sarah" },
-  ];
 
   return (
     <div className="dashboard-container">
@@ -62,17 +67,46 @@ function ManagerDashboard({ onLogout }) {
       <div className="dashboard-content">
         <aside className="sidebar">
           <nav className="nav-menu">
-            <div className="nav-item active">📊 Dashboard</div>
-            <div className="nav-item">👥 Team Overview</div>
-            <div className="nav-item">📊 Ticket Reports</div>
-            <div className="nav-item">📈 Performance</div>
-            <div className="nav-item">💬 User Feedback</div>
-            <div className="nav-item">⚙️ Settings</div>
+           <NavLink to="/manager" end className="nav-item">
+  <LayoutDashboard size={18} color="#3b82f6" className="nav-icon" />
+  <span>Dashboard</span>
+</NavLink>
+
+<NavLink to="/team-overview" className="nav-item">
+  <Users size={18} color="#8b5cf6" className="nav-icon" />
+  <span>Team Overview</span>
+</NavLink>
+
+<NavLink to="/ticket-reports" className="nav-item">
+  <ClipboardList size={18} color="#10b981" className="nav-icon" />
+  <span>Ticket Reports</span>
+</NavLink>
+
+<NavLink to="/performance" className="nav-item">
+  <BarChart3 size={18} color="#06b6d4" className="nav-icon" />
+  <span>Performance</span>
+</NavLink>
+
+<NavLink to="/feedback" className="nav-item">
+  <MessageSquare size={18} color="#ec4899" className="nav-icon" />
+  <span>User Feedback</span>
+</NavLink>
+
+<NavLink to="/settings" className="nav-item">
+  <Settings size={18} color="#64748b" className="nav-icon" />
+  <span>Settings</span>
+</NavLink>
+
           </nav>
-          <button className="logout-btn" onClick={onLogout}>Logout</button>
+          <button className="logout-btn" onClick={onLogout}>
+  <LogOut size={16} />
+  <span>Logout</span>
+</button>
+
         </aside>
 
         <main className="main-content">
+           {/* Summary cards */}
           <div className="stats-grid">
             {summaryCards.map((card) => (
               <div key={card.title} className="stat-card">
@@ -81,7 +115,7 @@ function ManagerDashboard({ onLogout }) {
               </div>
             ))}
           </div>
-
+           {/* Performance + Agent Activity */}
           <div className="dashboard-row">
             <div className="performance-card">
               <div className="card-header">
@@ -126,6 +160,8 @@ function ManagerDashboard({ onLogout }) {
             </div>
           </div>
 
+
+            {/* Recent Tickets table */}
           <div className="ticket-table-row">
             <div className="table-section">
               <h2>Recent Tickets</h2>
@@ -141,16 +177,25 @@ function ManagerDashboard({ onLogout }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {recentTickets.map((ticket) => (
-                    <tr key={ticket.id}>
-                      <td>{ticket.id}</td>
-                      <td>{ticket.subject}</td>
-                      <td><span className={`status ${ticket.status.toLowerCase().replace(/\s+/g, '-')}`}>{ticket.status}</span></td>
-                      <td>{ticket.priority}</td>
-                      <td>{ticket.agent}</td>
-                      <td><button className="action-btn view">View</button></td>
+                   {tickets.length === 0 ? (
+                    <tr>
+                      <td colSpan="6">No tickets found</td>
                     </tr>
-                  ))}
+                  ) : (
+                    tickets.slice(0, 5).map(ticket => (
+                      <tr key={ticket.id}>
+                        <td>#{ticket.id}</td>
+                        <td>{ticket.subject}</td>
+                       <td> <span className={`status ${ticket.statusName?.toLowerCase().replace(/\s+/g, '-')}`}>
+    {ticket.statusName || `Status ${ticket.statusId}`} </span></td>
+                      <td><span className={`priority ${ticket.priorityName?.toLowerCase()}`}>
+    {ticket.priorityName || `Priority ${ticket.priorityId}`}</span></td>
+
+                        <td>{ticket.agentName || `Agent ${ticket.agentId}`}</td>
+                        <td><button className="action-btn view">View</button></td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
