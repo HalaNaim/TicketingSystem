@@ -32,7 +32,7 @@ namespace MyAPI.Controllers
                     CreatedDate = t.CreatedDate,
                     UpdatedDate = t.UpdatedDate,
                     AgentId = t.AgentId,
-                    AgentName = t.Agent.Name,   // 👈 flatten agent name
+                    AgentName = t.Agent.Name,   
                     CategoryId = t.CategoryId,
                     CategoryName = t.Category.CategoryName,
                     PriorityId = t.PriorityId,
