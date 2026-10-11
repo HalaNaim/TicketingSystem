@@ -1,16 +1,17 @@
 import { useState, useEffect } from "react";
 import "./Dashboard.css";
 import axios from "axios";
-import { LayoutDashboard, Users, ClipboardList, BarChart3, MessageSquare, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, ClipboardList, MessageSquare, Settings, LogOut } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import "./ActionButtons.css";
 
-
-function ManagerDashboard({ onLogout }) {
+function ManagerDashboard({ userName, onLogout }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [tickets, setTickets] = useState([]);
+  const displayName = userName === "Manager User" ? "Manager" : userName;
 
   useEffect(() => {
-    axios.get("https://localhost:7184/Tickets")
+    axios.get(`${import.meta.env.VITE_API_URL}/Tickets`)
       .then(res => setTickets(res.data))
       .catch(err => console.error(err));
   }, []);
@@ -18,7 +19,7 @@ function ManagerDashboard({ onLogout }) {
    const summaryCards = [
     { title: "Open Tickets", value: tickets.filter(t => t.statusId === 1).length },
     { title: "In Progress", value: tickets.filter(t => t.statusId === 2).length },
-    { title: "Resolved Today", value: tickets.filter(t => t.statusId === 3).length }, 
+    { title: "Resolved Today", value: tickets.filter(t => t.statusId === 5).length }, 
     { title: "Team Members", value: 8 }, // keep static or replace with backend later
   ];
 
@@ -82,11 +83,6 @@ function ManagerDashboard({ onLogout }) {
   <span>Ticket Reports</span>
 </NavLink>
 
-<NavLink to="/performance" className="nav-item">
-  <BarChart3 size={18} color="#06b6d4" className="nav-icon" />
-  <span>Performance</span>
-</NavLink>
-
 <NavLink to="/feedback" className="nav-item">
   <MessageSquare size={18} color="#ec4899" className="nav-icon" />
   <span>User Feedback</span>
@@ -105,7 +101,9 @@ function ManagerDashboard({ onLogout }) {
 
         </aside>
 
-        <main className="main-content">
+       <main className="manager-main-content">
+          <h1 className="welcome-title">Welcome, {displayName}!</h1>
+
            {/* Summary cards */}
           <div className="stats-grid">
             {summaryCards.map((card) => (

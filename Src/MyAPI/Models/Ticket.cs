@@ -23,7 +23,7 @@ namespace MyAPI.Models
         public User? User { get; set; }
 
         [ForeignKey("Agent")]
-        public int AgentId { get; set; }
+        public int? AgentId { get; set; }
         public User? Agent { get; set; }
 
         [ForeignKey("Category")]
@@ -37,5 +37,7 @@ namespace MyAPI.Models
         [ForeignKey("Status")]
         public int StatusId { get; set; }
         public Status? Status { get; set; }
+
+        public ICollection<TicketAttachment> Attachments { get; set; } = new List<TicketAttachment>();
     }
 }

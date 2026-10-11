@@ -3,6 +3,7 @@ import "./Dashboard.css";
 import axios from "axios";
 import { NavLink, useNavigate } from "react-router-dom";
 import { LayoutDashboard, PlusCircle, ClipboardList, BookOpen, HelpCircle, Settings, LogOut } from "lucide-react";
+import "./ActionButtons.css";
 
 function EmployeeDashboard({ userName, onLogout }) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -17,7 +18,7 @@ function EmployeeDashboard({ userName, onLogout }) {
   const [tickets, setTickets] = useState([]);
 
   useEffect(() => {
-    axios.get("https://localhost:7184/Tickets")
+    axios.get(`${import.meta.env.VITE_API_URL}/Tickets`)
       .then(res => setTickets(res.data))
       .catch(err => console.error(err));
   }, []);
@@ -68,7 +69,7 @@ function EmployeeDashboard({ userName, onLogout }) {
             </NavLink>
             <NavLink to="/tickets/new" className="nav-item">
               <PlusCircle size={18} color="#ec4899" className="nav-icon" />
-              <span>Submit Ticket</span>
+              <span>Create Ticket</span>
             </NavLink>
             <NavLink to="/my-tickets" className="nav-item">
               <ClipboardList size={18} color="#10b981" className="nav-icon" />

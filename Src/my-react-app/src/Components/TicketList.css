@@ -15,6 +15,21 @@
   width: 360px;
 }
 
+.tickets-search input {
+  color: #000 !important;              /* black text */
+  background-color: #fff !important;   /* white background */
+  border: 1px solid #ccc !important;   /* visible border */
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  caret-color: #000 !important;        /* ensures the blinking cursor is black */
+}
+
+
+.tickets-search input::placeholder {
+  color: #888;               /* gray placeholder text */
+}
+
 .tickets-search-icon {
   position: absolute;
   left: 12px;

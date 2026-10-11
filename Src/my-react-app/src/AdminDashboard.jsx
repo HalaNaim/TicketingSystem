@@ -1,38 +1,75 @@
 import { useState, useEffect } from "react";
 import "./Dashboard.css";
 import axios from "axios";
+import { useAuth } from "./AuthContext";
 
-import { Routes, Route, NavLink } from "react-router-dom";  
-import TicketList from "./components/TicketList";         
-import TicketDetail from "./components/TicketDetail";     
-import TicketEdit from "./components/TicketEdit";         
-import TicketForm from "./components/TicketForm";  
-import { LayoutDashboard, Users, Tags, ClipboardList, PlusCircle,
+import { Routes, Route, NavLink, useNavigate } from "react-router-dom";  
+import TicketList from "./Components/TicketList";         
+import TicketDetail from "./Components/TicketDetail";     
+import TicketEdit from "./Components/TicketEdit";         
+import TicketForm from "./Components/TicketForm";  
+import "./ActionButtons.css";
+import { LayoutDashboard, Users, Tags, PlusCircle, ClipboardList,
          BarChart3, Settings, LogOut} from "lucide-react";  
 
 // Maps DB numeric IDs → readable labels + CSS class
 const STATUS_MAP = {
   1: { label: "Open",        cls: "open" },
   2: { label: "In Progress", cls: "in-progress" },
-  3: { label: "Resolved",    cls: "resolved" },
-  4: { label: "Closed",      cls: "closed" },
+  3: { label: "Closed",      cls: "closed" },
+  4: { label: "Pending",     cls: "pending" },
+  5: { label: "Resolved",    cls: "resolved" },
 };
 
 const PRIORITY_MAP = {
-  1: { label: "High",   cls: "high" },
-  2: { label: "Medium", cls: "medium" },
-  3: { label: "Low",    cls: "low" },
+  1: { label: "Low",      cls: "low" },
+  2: { label: "Medium",   cls: "medium" },
+  3: { label: "High",     cls: "high" },
+  4: { label: "Critical", cls: "critical" },
 };
 
-function AdminDashboard({ onLogout }) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [tickets, setTickets] = useState([]);
 
-  useEffect(() => {
-    axios.get("https://localhost:7184/Tickets")
+  function AdminDashboard({ userName,onLogout }) {
+   const [searchQuery, setSearchQuery] = useState("");
+   const [tickets, setTickets] = useState([]);
+   const [users, setUsers] = useState([]);
+   const navigate = useNavigate();
+   const { auth } = useAuth();
+   const displayName = userName === "Admin User" ? "Admin" : userName;
+
+   useEffect(() => {
+     axios.get(`${import.meta.env.VITE_API_URL}/Tickets`)
       .then(res => setTickets(res.data))
       .catch(err => console.error(err));
-  }, [])
+
+     axios.get(`${import.meta.env.VITE_API_URL}/Users`)
+      .then(res => setUsers(res.data))
+      .catch(err => console.error(err));
+      }, []);
+
+  const handleDelete = async (id) => {
+  try {
+    const res = await axios.delete(`${import.meta.env.VITE_API_URL}/Tickets/${id}`, {
+      headers: { Authorization: `Bearer ${auth.token}` }
+    });
+    // Refresh list after delete
+    setTickets(tickets.filter(ticket => ticket.id !== id));
+
+    // ✅ Show success message
+    alert(res.data?.message || "Ticket deleted successfully!");
+  } catch (err) {
+    console.error("Delete failed:", err.response?.data || err.message);
+    alert("❌ Delete failed: " + (err.response?.data || err.message));
+  }
+};
+  const totalTickets = tickets.length;
+  const openTickets = tickets.filter(t => t.statusId === 1).length;
+  const inProgressTickets = tickets.filter(t => t.statusId === 2).length;
+  const closedTickets = tickets.filter(t => t.statusId === 3).length;
+  const pendingTickets = tickets.filter(t => t.statusId === 4).length;
+  const resolvedTickets = tickets.filter(t => t.statusId === 5).length;
+
+  const activeUsers = users.length; // or filter by active flag if you have one
 
 
 
@@ -75,27 +112,32 @@ function AdminDashboard({ onLogout }) {
       <LayoutDashboard size={18} color="#3b82f6" className="nav-icon" />
       <span>Dashboard</span>
     </NavLink>
-    
-    <NavLink to="/users" className="nav-item">
-      <Users size={18} color="#8b5cf6" className="nav-icon" />
-      <span>Manage Users</span>
-    </NavLink>
-    <NavLink to="/categories & Priorities" className="nav-item">
-      <Tags size={18} color="#f59e0b" className="nav-icon" />
-      <span>Categories & Priorities</span>
-    </NavLink>
-    <NavLink to="/tickets" className="nav-item">
-      <ClipboardList size={18} color="#10b981" className="nav-icon" />
-      <span>Tickets</span>
-    </NavLink>
+
     <NavLink to="/tickets/new" className="nav-item">
       <PlusCircle size={18} color="#ec4899" className="nav-icon" />
       <span>Create Ticket</span>
     </NavLink>
-    <NavLink to="/Reports & Analytics" className="nav-item">
+
+    <NavLink to="/users&roles" className="nav-item">
+      <Users size={18} color="#8b5cf6" className="nav-icon" />
+      <span>Manage Users & Roles</span>
+    </NavLink>
+
+    <NavLink to="/my-tickets" className="nav-item">
+              <ClipboardList size={18} color="#10b981" className="nav-icon" />
+              <span>Tickets Overview</span>
+            </NavLink>
+
+    <NavLink to="/categories-priorities" className="nav-item">
+      <Tags size={18} color="#f59e0b" className="nav-icon" />
+      <span>Categories & Priorities</span>
+    </NavLink>
+
+    <NavLink to="/reports" className="nav-item">
       <BarChart3 size={18} color="#06b6d4" className="nav-icon" />
       <span>Reports & Analytics</span>
     </NavLink>
+
     <NavLink to="/settings" className="nav-item">
       <Settings size={18} color="#64748b" className="nav-icon" />
       <span>Settings</span>
@@ -108,27 +150,42 @@ function AdminDashboard({ onLogout }) {
   </button>
 </aside>
 
+
         {/* Main Content */}
         <main className="main-content">
+          <h1 className="welcome-title">Welcome, {displayName}!</h1>
+
           {/* Stats Cards */}
-          <div className="stats-grid">
-            <div className="stat-card">
-              <h3>Total Tickets</h3>
-              <p className="stat-number">1234</p>
-            </div>
-            <div className="stat-card">
-              <h3>Open Tickets</h3>
-              <p className="stat-number">256</p>
-            </div>
-            <div className="stat-card">
-              <h3>Closed Tickets</h3>
-              <p className="stat-number">874</p>
-            </div>
-            <div className="stat-card">
-              <h3>Active Users</h3>
-              <p className="stat-number">120</p>
-            </div>
-          </div>
+    <div className="stats-grid">
+      <div className="stat-card">
+        <h3>Total Tickets</h3>
+        <p className="stat-number">{totalTickets}</p>
+      </div>
+      <div className="stat-card">
+        <h3>Open Tickets</h3>
+        <p className="stat-number">{openTickets}</p>
+      </div>
+      <div className="stat-card">
+        <h3>In Progress Tickets</h3>
+        <p className="stat-number">{inProgressTickets}</p>
+      </div>
+      <div className="stat-card">
+        <h3>Pending Tickets</h3>
+        <p className="stat-number">{pendingTickets}</p>
+      </div>
+      <div className="stat-card">
+        <h3>Resolved Tickets</h3>
+        <p className="stat-number">{resolvedTickets}</p>
+      </div>
+      <div className="stat-card">
+        <h3>Closed Tickets</h3>
+        <p className="stat-number">{closedTickets}</p>
+      </div>
+      <div className="stat-card">
+        <h3>Active Users</h3>
+        <p className="stat-number">{activeUsers}</p>
+      </div>
+    </div>
 
           {/* Ticket Overview Table */}
           <div className="table-section">
@@ -161,9 +218,25 @@ function AdminDashboard({ onLogout }) {
                         <td><span className={`priority ${priority.cls}`}>{priority.label}</span></td>
                         <td>{ticket.agentName || `Agent ${ticket.agentId}`}</td>
                         <td>
-                          <button className="action-btn edit">Edit</button>
-                          <button className="action-btn delete">Delete</button>
-                          <button className="action-btn view">View</button>
+                         <button
+                className="action-btn view"
+                onClick={() => navigate(`/tickets/${ticket.id}`)}
+              >
+                View
+              </button>
+             <button
+              className="action-btn edit"
+             onClick={() => navigate(`/tickets/${ticket.id}/edit`)}
+              >
+                 Edit
+              </button>
+
+              <button
+                className="action-btn delete"
+                onClick={() => handleDelete(ticket.id)}
+              >
+                Delete
+              </button>
                         </td>
                       </tr>
                     );
@@ -250,7 +323,10 @@ function AdminDashboard({ onLogout }) {
           </div>
           <Routes>   
     <Route path="/tickets" element={<TicketList />} />
-    <Route path="/tickets/:id" element={<TicketDetail />} />
+  <Route 
+        path="/tickets/:id" 
+        element={<TicketDetail userRole={auth.userRole} currentUserName={auth.userName} />} 
+      />
     <Route path="/tickets/:id/edit" element={<TicketEdit />} />
     <Route path="/tickets/new" element={<TicketForm />} />
   </Routes>

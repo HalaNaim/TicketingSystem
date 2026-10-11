@@ -9,79 +9,55 @@ import EmployeeDashboard from "./EmployeeDashboard";
 import ManagerDashboard from "./ManagerDashboard";
 import AgentDashboard from "./AgentDashboard";
 import AdminDashboard from "./AdminDashboard";
+import "./ActionButtons.css"; 
+import { AuthProvider, useAuth } from "./AuthContext";
 
 // Ticket components
-import TicketList from "./components/TicketList";
-import TicketForm from "./components/TicketForm";
-import TicketDetail from "./components/TicketDetail";
-import TicketEdit from "./components/TicketEdit";
+import TicketList from "./Components/TicketList";
+import TicketForm from "./Components/TicketForm";
+import TicketDetail from "./Components/TicketDetail";
+import TicketEdit from "./Components/TicketEdit";
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        {/* Default route - redirect to login */}
-        <Route path="/" element={<Navigate to="/login" />} />
+    <AuthProvider>
+      <Router>
+        <Routes>
+          {/* Default route - redirect to login */}
+          <Route path="/" element={<Navigate to="/login" />} />
 
-        {/* Authentication routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/register" element={<Register />} />
+          {/* Authentication routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/register" element={<Register />} />
 
-        {/* Protected dashboard route */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
+          {/* Protected dashboards */}
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/employee" element={<ProtectedRoute><EmployeeDashboard /></ProtectedRoute>} />
+          <Route path="/manager" element={<ProtectedRoute><ManagerDashboard /></ProtectedRoute>} />
+          <Route path="/agent" element={<ProtectedRoute><AgentDashboard /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
 
-        {/* Ticket routes */}
-        <Route
-          path="/tickets"
-          element={
-            <ProtectedRoute>
-              <TicketList />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/tickets/new"
-          element={
-            <ProtectedRoute>
-              <TicketForm />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/tickets/:id"
-          element={
-            <ProtectedRoute>
-              <TicketDetail />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/tickets/:id/edit"
-          element={
-            <ProtectedRoute>
-              <TicketEdit />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/" element={<EmployeeDashboard />} />
-      <Route path="/my-tickets" element={<TicketList />} />
-      <Route path="/employee" element={<ProtectedRoute><EmployeeDashboard /></ProtectedRoute>} />
-      <Route path="/manager" element={<ProtectedRoute><ManagerDashboard /></ProtectedRoute>} />
-      <Route path="/agent" element={<ProtectedRoute><AgentDashboard /></ProtectedRoute>} />
-      <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-       
-      </Routes>
-    </Router>
+          {/* Ticket routes */}
+          <Route path="/tickets" element={<ProtectedRoute><TicketListWrapper /></ProtectedRoute>} />
+          <Route path="/tickets/new" element={<ProtectedRoute><TicketForm /></ProtectedRoute>} />
+          <Route path="/tickets/:id" element={<ProtectedRoute><TicketDetailWrapper /></ProtectedRoute>} />
+          <Route path="/tickets/:id/edit" element={<ProtectedRoute><TicketEdit /></ProtectedRoute>} />
+          <Route path="/my-tickets" element={<ProtectedRoute><TicketListWrapper /></ProtectedRoute>} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 
+// Wrapper to inject auth props into TicketDetail
+function TicketDetailWrapper() {
+  const { auth } = useAuth();
+  return <TicketDetail userRole={auth.userRole} currentUserName={auth.userName} />;
+}
+function TicketListWrapper() {
+  const { auth } = useAuth();
+  return <TicketList userRole={auth.userRole} />;
+}
 export default App;

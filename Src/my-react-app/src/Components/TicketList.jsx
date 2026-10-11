@@ -1,23 +1,29 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import "./TicketList.css";
+import { useNavigate } from "react-router-dom";
+import "../ActionButtons.css";
+import { useAuth } from "../AuthContext";
 
 // Maps DB numeric IDs → readable labels + CSS class
 const STATUS_MAP = {
   1: { label: "Open",        cls: "open" },
   2: { label: "In Progress", cls: "in-progress" },
-  3: { label: "Resolved",    cls: "resolved" },
-  4: { label: "Closed",      cls: "closed" },
+  4: { label: "Pending",     cls: "pending" },
+  5: { label: "Resolved",    cls: "resolved" },
+  3: { label: "Closed",      cls: "closed" },
 };
 
 const PRIORITY_MAP = {
-  1: { label: "High",   cls: "high" },
-  2: { label: "Medium", cls: "medium" },
-  3: { label: "Low",    cls: "low" },
+  1: { label: "Low",     cls: "low" },
+  2: { label: "Medium",  cls: "medium" },
+  3: { label: "High",    cls: "high" },
+  4: { label: "Critical",cls: "critical" },
 };
 
-function TicketList() {
+function TicketList({ userRole }) {
+  const navigate = useNavigate();
   const [tickets, setTickets] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -25,13 +31,16 @@ function TicketList() {
   const [agentFilter, setAgentFilter] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = 8;
+  const { auth } = useAuth();
 
   useEffect(() => {
     axios
-      .get("https://localhost:7184/Tickets")
+      .get(`${import.meta.env.VITE_API_URL}/Tickets`, {
+        headers: { Authorization: `Bearer ${auth.token}` }
+      })
       .then((res) => setTickets(res.data))
       .catch((err) => console.error(err));
-  }, []);
+  }, [auth.token]);
 
   // Unique agents pulled from the actual data
   const agents = [...new Set(tickets.map((t) => t.agentId))];
@@ -42,7 +51,7 @@ function TicketList() {
         t.subject.toLowerCase().includes(search.toLowerCase())) &&
       (statusFilter === "" || t.statusId.toString() === statusFilter) &&
       (priorityFilter === "" || t.priorityId.toString() === priorityFilter) &&
-      (agentFilter === "" || t.agentId.toString() === agentFilter)
+      (agentFilter === "" || t.agentId?.toString() === agentFilter)
     );
   });
 
@@ -58,6 +67,22 @@ function TicketList() {
     const date = new Date(d);
     return isNaN(date) ? d : date.toISOString().split("T")[0];
   };
+
+  const handleDelete = async (id) => {
+  try {
+    const res = await axios.delete(`${import.meta.env.VITE_API_URL}/Tickets/${id}`, {
+      headers: { Authorization: `Bearer ${auth.token}` }
+    });
+    // Refresh list after delete
+    setTickets(tickets.filter(ticket => ticket.id !== id));
+
+    // ✅ Show success message
+    alert(res.data?.message || "Ticket deleted successfully!");
+  } catch (err) {
+    console.error("Delete failed:", err.response?.data || err.message);
+    alert("❌ Delete failed: " + (err.response?.data || err.message));
+  }
+};
 
   return (
     <div className="tickets-page">
@@ -131,6 +156,7 @@ function TicketList() {
             <tr>
               <th>Ticket ID</th>
               <th>Subject</th>
+              <th>Creator</th>
               <th>Status</th>
               <th>Priority</th>
               <th>Agent</th>
@@ -141,7 +167,7 @@ function TicketList() {
           <tbody>
             {pageData.length === 0 ? (
               <tr>
-                <td colSpan="7" className="empty-row">No tickets found</td>
+                <td colSpan="8" className="empty-row">No tickets found</td>
               </tr>
             ) : (
               pageData.map((ticket) => {
@@ -151,18 +177,50 @@ function TicketList() {
                   <tr key={ticket.id}>
                     <td className="ticket-id">#{ticket.id}</td>
                     <td>{ticket.subject}</td>
+                    <td>{ticket.creatorName}</td>
                     <td>
                       <span className={`status ${status.cls}`}>{status.label}</span>
                     </td>
                     <td>
                       <span className={`priority ${priority.cls}`}>{priority.label}</span>
                     </td>
-                    <td>{ticket.agentName || `Agent ${ticket.agentId}`}</td>
+                    <td>{ticket.agentName || "-"}</td>
                     <td>{formatDate(ticket.createdDate)}</td>
                     <td className="action-cell">
-                      <button className="action-btn view">View</button>
-                      <button className="action-btn edit">Edit</button>
-                      <button className="action-btn delete">Delete</button>
+                      <button
+                        className="action-btn view"
+                        onClick={() => navigate(`/tickets/${ticket.id}`)}
+                      >
+                        View
+                      </button>
+
+                      {(userRole === "Admin" || userRole === "Employee") && (
+                        <>
+                          <button
+                            className="action-btn edit"
+                            onClick={() => navigate(`/tickets/${ticket.id}/edit`)}
+                            disabled={ticket.statusId === 2}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="action-btn delete"
+                            onClick={() => handleDelete(ticket.id)}
+                            disabled={ticket.statusId === 2}
+                          >
+                            Delete
+                          </button>
+                        </>
+                      )}
+
+                      {userRole === "Manager" && (
+                        <button
+                          className="action-btn assign"
+                          onClick={() => navigate(`/tickets/${ticket.id}/assign`)}
+                        >
+                          Assign
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
@@ -215,5 +273,4 @@ function TicketList() {
     </div>
   );
 }
-
 export default TicketList;

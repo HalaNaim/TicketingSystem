@@ -84,6 +84,19 @@ namespace MyAPI.Controllers
             // TODO: implement employee ticket logic
             return Ok("Tickets list for Employee");
         }
+
+        // GET /Users/agents
+        [HttpGet("agents")]
+        public async Task<IActionResult> GetAgents()
+        {
+            var agents = await _context.Users
+                .Where(u => u.RoleId == 2) // only users with role Agent
+                .Select(u => new { u.Id, u.Name })
+                .ToListAsync();
+
+            return Ok(agents);
+        }
+
     }
 
     // DTOs

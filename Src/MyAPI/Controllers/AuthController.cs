@@ -24,19 +24,25 @@ namespace MyAPI.Controllers
             _config = config;
         }
 
+
+
         [HttpPost("login")]
-        public IActionResult Login([FromBody] LoginRequest request)   // 👈 add [FromBody] here
+        public IActionResult Login([FromBody] LoginRequest request)
         {
             var user = _context.Users
                 .Include(u => u.Role)
                 .SingleOrDefault(u => u.Email == request.Email);
 
-            if (user == null) return Unauthorized();
+            if (user == null || user.Password != request.Password)
+            {
+                return Unauthorized();
+            }
 
             var claims = new[]
             {
         new Claim(ClaimTypes.Name, user.Name),
-        new Claim(ClaimTypes.Role, user.Role.RoleName)
+        new Claim(ClaimTypes.Role, user.Role.RoleName),
+        new Claim("id", user.Id.ToString()) 
     };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
@@ -52,24 +58,6 @@ namespace MyAPI.Controllers
             return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
         }
 
-
-        [HttpPost("forgot-password")]
-        public IActionResult ForgotPassword([FromBody] ForgotPasswordRequest request)
-        {
-            var user = _context.Users.SingleOrDefault(u => u.Email == request.Email);
-            if (user == null) return BadRequest("User not found");
-
-            // Generate secure token
-            var resetToken = Guid.NewGuid().ToString();
-            user.PasswordResetToken = resetToken;
-            user.PasswordResetExpiry = DateTime.Now.AddHours(24);
-            _context.SaveChanges();
-
-            var resetLink = $"https://localhost:7184/Auth/reset-password?token={resetToken}";
-            // TODO: send resetLink via email using SMTP or a mail service
-
-            return Ok("Reset link sent to email");
-        }
 
 
 

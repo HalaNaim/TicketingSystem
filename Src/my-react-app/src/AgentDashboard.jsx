@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import "./Dashboard.css";
 import axios from "axios";
-import { LayoutDashboard, ClipboardList, PlusCircle, User, BarChart3, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, ClipboardList, BarChart3, Settings, LogOut } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import "./ActionButtons.css";
 
-
-function AgentDashboard({ onLogout }) {
+function AgentDashboard({ userName, onLogout }) {
   const [searchQuery, setSearchQuery] = useState("");
+  const displayName = userName === "Agent User" ? "Agent" : userName;
+
   const summaryCards = [
     { title: "My Open Tickets", value: 42 },
     { title: "In Progress", value: 15 },
@@ -30,7 +32,7 @@ function AgentDashboard({ onLogout }) {
 const [tickets, setTickets] = useState([]);
 
 useEffect(() => {
-  axios.get("https://localhost:7184/Tickets")
+  axios.get(`${import.meta.env.VITE_API_URL}/Tickets`)
     .then(res => setTickets(res.data))
     .catch(err => console.error(err));
 }, []);
@@ -65,47 +67,41 @@ useEffect(() => {
       </header>
 
       <div className="dashboard-content">
-        <aside className="sidebar">
-          <nav className="nav-menu">
-            <NavLink to="/agent" end className="nav-item">
-  <LayoutDashboard size={18} color="#3b82f6" className="nav-icon" />
-  <span>Dashboard</span>
-</NavLink>
+       <aside className="sidebar">
+  <nav className="nav-menu">
 
-<NavLink to="/my-tickets" className="nav-item">
-  <ClipboardList size={18} color="#10b981" className="nav-icon" />
-  <span>My Tickets</span>
-</NavLink>
+    <NavLink to="/agent" end className="nav-item">
+      <LayoutDashboard size={18} color="#3b82f6" className="nav-icon" />
+      <span>Dashboard</span>
+    </NavLink>
 
-<NavLink to="/tickets/new" className="nav-item">
-  <PlusCircle size={18} color="#ec4899" className="nav-icon" />
-  <span>Create Ticket</span>
-</NavLink>
+    <NavLink to="/my-tickets" className="nav-item">
+      <ClipboardList size={18} color="#10b981" className="nav-icon" />
+      <span>My Tickets</span>
+    </NavLink>
 
-<NavLink to="/assigned" className="nav-item">
-  <User size={18} color="#8b5cf6" className="nav-icon" />
-  <span>Assigned Tickets</span>
-</NavLink>
 
-<NavLink to="/performance" className="nav-item">
-  <BarChart3 size={18} color="#06b6d4" className="nav-icon" />
-  <span>Performance</span>
-</NavLink>
 
-         <NavLink to="/settings" className="nav-item">
-          <Settings size={18} color="#64748b" className="nav-icon" />
-          <span>Settings</span>
-          </NavLink>
+    <NavLink to="/performance" className="nav-item">
+      <BarChart3 size={18} color="#06b6d4" className="nav-icon" />
+      <span>Performance</span>
+    </NavLink>
 
-          </nav>
-          <button className="logout-btn" onClick={onLogout}>
-  <LogOut size={16} />
-  <span>Logout</span>
-</button>
+    <NavLink to="/settings" className="nav-item">
+      <Settings size={18} color="#64748b" className="nav-icon" />
+      <span>Settings</span>
+    </NavLink>
+  </nav>
 
-        </aside>
+  <button className="logout-btn" onClick={onLogout}>
+    <LogOut size={16} />
+    <span>Logout</span>
+  </button>
+</aside>
 
-        <main className="main-content">
+        <main className="agent-main-content">
+          <h1 className="welcome-title">Welcome, {displayName}!</h1>
+
           <div className="stats-grid">
             {summaryCards.map((card) => (
               <div key={card.title} className="stat-card">

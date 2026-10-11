@@ -29,13 +29,12 @@ function Dashboard() {
   // Route to appropriate dashboard based on role
   switch (role) {
     case "Admin":
-      return <AdminDashboard onLogout={handleLogout} />;
+      return <AdminDashboard userName={userName} onLogout={handleLogout} />;
     case "Agent":
       return <AgentDashboard userName={userName} onLogout={handleLogout} />;
     case "Manager":
       return <ManagerDashboard userName={userName} onLogout={handleLogout} />;
     default:
-      // Default to Employee Dashboard
       return <EmployeeDashboard userName={userName} onLogout={handleLogout} />;
   }
 }

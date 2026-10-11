@@ -1,0 +1,25 @@
+button.action-btn {
+  padding: 6px 12px;
+  margin: 0 4px;
+  border: 1px solid #ddd !important;
+  background-color: white !important;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+button.action-btn.view {
+  color: #28a745 !important;
+  border-color: #28a745 !important;
+}
+
+button.action-btn.edit {
+  color: #007bff !important;
+  border-color: #007bff !important;
+}
+
+button.action-btn.delete {
+  color: #ff6b6b !important;
+  border-color: #ff6b6b !important;
+}

@@ -63,6 +63,7 @@ body {
 }
 
 .search-bar {
+  color: #000 !important;              /* black text */
   width: 100%;
   padding: 10px 15px 10px 40px;
   border: 1px solid #ddd;
@@ -381,37 +382,6 @@ body {
 .priority.low {
   background-color: #d4edda;
   color: #155724;
-}
-
-.action-btn {
-  padding: 6px 12px;
-  margin: 0 4px;
-  border: 1px solid #ddd;
-  background-color: white;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  transition: all 0.2s;
-}
-
-.action-btn:hover {
-  background-color: #f0f0f0;
-  border-color: #999;
-}
-
-.action-btn.edit {
-  color: #007bff;
-  border-color: #007bff;
-}
-
-.action-btn.delete {
-  color: #ff6b6b;
-  border-color: #ff6b6b;
-}
-
-.action-btn.view {
-  color: #28a745;
-  border-color: #28a745;
 }
 
 /* Layout Rows */
